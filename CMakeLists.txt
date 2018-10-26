@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(QuadriFlow)
+project(Quadriflow)
 
 
 option(BUILD_PERFORMANCE_TEST "More subdivisition for performance test" OFF)
@@ -11,6 +11,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 find_package(TBB REQUIRED)
 find_package(Eigen REQUIRED)
 find_package(glm REQUIRED)
+find_package(pybind11 REQUIRED)
 find_package(Boost COMPONENTS program_options REQUIRED)
 
 if (BUILD_GUROBI)
@@ -42,7 +43,8 @@ endif()
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-sign-compare")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-sign-compare")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")  # enable assert
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g")  # enable assert
@@ -88,6 +90,7 @@ endif(BUILD_GUROBI)
 
 set(
     quadriflow_SRC
+    src/py-module.cpp 
     src/adjacent-matrix.cpp
     src/adjacent-matrix.hpp
     src/compare-key.hpp
@@ -104,7 +107,6 @@ set(
     src/loader.hpp
     src/localsat.cpp
     src/localsat.hpp
-    src/main.cpp
     src/merge-vertex.cpp
     src/merge-vertex.hpp
     src/optimizer.cpp
@@ -121,13 +123,14 @@ set(
     src/subdivide.hpp
 )
 
-add_executable(
-    quadriflow
-    ${quadriflow_SRC}
+pybind11_add_module(
+	qf_module 
+	${quadriflow_SRC}
 )
 
 target_link_libraries(
-    quadriflow
+	qf_module 
+	PRIVATE
     ${TBB_LIBRARIES}
     ${Boost_LIBRARIES}
     ${LEMON_LIBRARIES}

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <glm/glm.hpp>
 #include <vector>
+#include <corecrt_math_defines.h>
 using namespace Eigen;
 
 struct DEdge

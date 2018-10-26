@@ -36,7 +36,7 @@ class Parametrizer {
    public:
     Parametrizer() {}
     // Mesh Initialization
-    void Load(const char* filename);
+    void Load();
     void ComputeMeshStatus();
     void ComputeSmoothNormal();
     void ComputeSharpEdges();

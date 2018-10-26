@@ -1,5 +1,6 @@
 #include "config.hpp"
 #include "field-math.hpp"
+#include "loader.hpp"
 #include "optimizer.hpp"
 #include "parametrizer.hpp"
 
@@ -37,7 +38,8 @@ int main(int argc, char** argv) {
     }
     printf("%d %s %s\n", faces, input_obj.c_str(), output_obj.c_str());
     if (input_obj.size() >= 1) {
-        field.Load(input_obj.c_str());
+        load(input_obj.c_str(), field.V, field.F);
+        field.Load();
     } else {
         assert(0);
         // field.Load((std::string(DATA_PATH) + "/fertility.obj").c_str());

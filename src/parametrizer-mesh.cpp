@@ -8,8 +8,10 @@
 #include "dedge.hpp"
 #include <queue>
 
-void Parametrizer::Load(const char* filename) {
-    load(filename, V, F);
+//void Parametrizer::Load(const char* filename) {
+void Parametrizer::Load() {
+    //Eigen::MatrixXd V, Eigen::MatrixXi F
+    //load(filename, V, F);
     double maxV[3] = {-1e30, -1e30, -1e30};
     double minV[3] = {1e30, 1e30, 1e30};
 #ifdef WITH_OMP
