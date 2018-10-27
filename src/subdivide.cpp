@@ -143,7 +143,7 @@ void subdivide(MatrixXi &F, MatrixXd &V, VectorXd& rho, VectorXi &V2E, VectorXi 
     E2E.conservativeResize(nF * 3);
 }
 
-void subdivide_edgeDiff(MatrixXi &F, MatrixXd &V, MatrixXd &N, MatrixXd &Q, MatrixXd &O, MatrixXd* S,
+bool subdivide_edgeDiff(MatrixXi &F, MatrixXd &V, MatrixXd &N, MatrixXd &Q, MatrixXd &O, MatrixXd* S,
                         VectorXi &V2E, VectorXi &E2E, VectorXi &boundary, VectorXi &nonmanifold,
                         std::vector<Vector2i> &edge_diff, std::vector<DEdge> &edge_values,
                         std::vector<Vector3i> &face_edgeOrients, std::vector<Vector3i> &face_edgeIds,
@@ -499,14 +499,18 @@ void subdivide_edgeDiff(MatrixXi &F, MatrixXd &V, MatrixXd &N, MatrixXd &Q, Matr
             auto diff = edge_diff[face_edgeIds[i][j]];
             if (abs(diff[0]) > 1 || abs(diff[1]) > 1) {
                 printf("wrong init %d %d!\n", face_edgeIds[i][j], i * 3 + j);
-                exit(0);
+				// was exit(0)
+                return false;
             }
         }
     }
     for (int i = 0; i < edge_diff.size(); ++i) {
         if (abs(edge_diff[i][0]) > 1 || abs(edge_diff[i][1]) > 1) {
             printf("wrong...\n");
-            exit(0);
+            // was exit(0)
+            return false;
         }
     }
+
+	return true;
 }
