@@ -39,6 +39,8 @@ import bpy
 
 def register():
     bpy.utils.register_class(qf_remesh.QFRemeshOperator)
+    bpy.utils.register_class(qf_remesh.QFRemeshPanel)
 
 def unregister():
     bpy.utils.unregister_class(qf_remesh.QFRemeshOperator)
+    bpy.utils.unregister_class(qf_remesh.QFRemeshPanel)

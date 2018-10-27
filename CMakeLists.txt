@@ -3,8 +3,8 @@ project(Quadriflow)
 
 
 option(BUILD_PERFORMANCE_TEST "More subdivisition for performance test" OFF)
-option(BUILD_OPENMP "Enable support for OpenMP" OFF)
-option(BUILD_LOG "Enable verbose log" OFF)
+option(BUILD_OPENMP "Enable support for OpenMP" ON)
+option(BUILD_LOG "Enable verbose log" ON)
 option(BUILD_GUROBI "Enable GUROBI for comparison ONLY" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
@@ -46,7 +46,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-sign-compare")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")  # enable assert
+#  /openmp required for Visual Studio
+set(CMAKE_CXX_FLAGS_RELEASE "/openmp")  # enable assert
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g")  # enable assert
 set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS}")
 set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG}")

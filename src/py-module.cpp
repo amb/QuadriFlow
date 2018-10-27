@@ -9,39 +9,77 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-Parametrizer field;
+#include <omp.h>
 
 namespace py = pybind11;
 
-std::tuple<std::vector<std::vector<double>>, std::vector<std::vector<int>>> 
-remesh(std::vector<std::vector<double>> positions, std::vector<std::vector<int>> indices) {
+std::tuple<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector4i>> remesh(
+    MatrixXd positions, MatrixXi indices, int polycount, bool psharp, bool ascale) {
+    Parametrizer field;
+
+	// openmp debugging
+#ifdef WITH_OMP
+    printf("With OpenMP\n");
+ //   omp_set_dynamic(0);
+	//omp_set_num_threads(16);
+
+ //   int nb_threads = omp_get_max_threads();
+ //   printf(">> omp_get_max_thread():\n>> %i\n", nb_threads);
+
+	//#pragma omp parallel
+ //   {
+ //       std::cout << ">> threads: " << omp_get_num_threads() << std::endl;
+ //   }
+	//nb_threads = omp_get_num_threads();
+ //   printf(">> omp_get_num_threads():\n>> %i\n", nb_threads);
+
+	//int nthreads, tid;
+
+	///* Fork a team of threads giving them their own copies of variables */
+	//#pragma omp parallel private(nthreads, tid)
+ //   {
+ //       /* Obtain thread number */
+ //       tid = omp_get_thread_num();
+ //       printf("Hello World from thread = %d\n", tid);
+
+ //       /* Only master thread does this */
+ //       if (tid == 0) {
+ //           nthreads = omp_get_num_threads();
+ //           printf("Number of threads = %d\n", nthreads);
+ //       }
+
+ //   } /* All threads join master thread and disband */
+#endif
+
+#ifdef WITH_TBB
+    printf("With TBB\n");
+#endif
+
+
     setbuf(stdout, NULL);
 
-    int faces = -1;
+    int faces = polycount;
 
-    field.F.resize(3, indices.size());
-    for (int i = 0; i < indices.size(); i++) {
-        field.F.col(i)[0] = indices[i][0];
-        field.F.col(i)[1] = indices[i][1];
-        field.F.col(i)[2] = indices[i][2];
-    }
+    field.F.resize(indices.rows(), indices.cols());
+    field.F = indices;
 
-    field.V.resize(3, positions.size());
-    for (int i = 0; i < positions.size(); i++) {
-        field.V.col(i)[0] = positions[i][0];
-        field.V.col(i)[1] = positions[i][1];
-        field.V.col(i)[2] = positions[i][2];
-    }
+    field.V.resize(positions.rows(), positions.cols());
+    field.V = positions;
 
     //        field.flag_preserve_sharp = 1;
     //        field.flag_adaptive_scale = 1;
     //        field.flag_minimum_cost_flow = 1;
     //        field.flag_aggresive_sat = 1;
 
+    if (psharp) field.flag_preserve_sharp = 1;
+    if (ascale) field.flag_adaptive_scale = 1;
+
     // Initialize
+    printf("initialize\n");
     field.Initialize(faces);
 
     // Solve Orientation Field
+    printf("solve orientation field\n");
     Optimizer::optimize_orientations(field.hierarchy);
     field.ComputeOrientationSingularities();
 
@@ -49,38 +87,25 @@ remesh(std::vector<std::vector<double>> positions, std::vector<std::vector<int>>
         field.EstimateSlope();
     }
     // Solve for scale
+    printf("solve for scale\n");
     Optimizer::optimize_scale(field.hierarchy, field.rho, field.flag_adaptive_scale);
     field.flag_adaptive_scale = 1;
 
     // Solve for position field
+    printf("solve for position field\n");
     Optimizer::optimize_positions(field.hierarchy, field.flag_adaptive_scale);
 
     field.ComputePositionSingularities();
 
     // Solve index map
+    printf("solve index map\n");
     field.ComputeIndexMap();
 
     //	field.LoopFace(2);
-    std::vector<std::vector<double>> v_out = std::vector<std::vector<double>>();
-    std::vector<std::vector<int>> f_out = std::vector<std::vector<int>>();
 
-    for (int i = 0; i < field.O_compact.size(); i++) {
-        std::vector<double> v = std::vector<double>();
-        v_out.push_back(v);
-        v_out[i][0] = field.O_compact[i][0];
-        v_out[i][1] = field.O_compact[i][1];
-        v_out[i][2] = field.O_compact[i][2];
-    }
+    printf("Finished Quadriflow.\n");
 
-    for (int i = 0; i < field.F_compact.size(); i++) {
-        std::vector<int> f = std::vector<int>();
-        f_out.push_back(f);
-        f_out[i][0] = field.F_compact[i][0];
-        f_out[i][1] = field.F_compact[i][1];
-        f_out[i][2] = field.F_compact[i][2];
-    }
-
-    return {v_out, f_out};
+    return {field.O_compact, field.F_compact};
 }
 
 PYBIND11_MODULE(qf_module, m) {

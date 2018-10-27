@@ -532,13 +532,14 @@ void Optimizer::optimize_positions_dynamic(
         }
         std::vector<double> b(O_compact.size() * 2);
         std::vector<double> x(O_compact.size() * 2);
-#ifdef WITH_OMP
-#pragma omp parallel for
-#endif
+
         std::vector<Vector3d> Q_compact(O_compact.size());
         std::vector<Vector3d> N_compact(O_compact.size());
         std::vector<Vector3d> V_compact(O_compact.size());
-        for (int i = 0; i < O_compact.size(); ++i) {
+#ifdef WITH_OMP
+#pragma omp parallel for
+#endif
+		for (int i = 0; i < O_compact.size(); ++i) {
             Q_compact[i] = Q.col(Vind[i]);
             N_compact[i] = N.col(Vind[i]);
             V_compact[i] = V.col(Vind[i]);

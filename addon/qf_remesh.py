@@ -9,9 +9,10 @@ import random
 import cProfile, pstats, io
 
 
-def write_fast(ve, tr, qu):
+def write_fast(ve, qu):
     me = bpy.data.meshes.new("testmesh")
 
+    tr = np.array([])
     quadcount = len(qu)
     tricount  = len(tr)
 
@@ -29,8 +30,7 @@ def write_fast(ve, tr, qu):
 
     loops = np.concatenate((np.arange(tricount) * 3, np.arange(quadcount) * 4 + tricount * 3))
     
-    # [::-1] makes normals consistent (from OpenVDB)
-    v_out = np.concatenate((tr.ravel()[::-1], qu.ravel()[::-1]))
+    v_out = np.concatenate((tr.ravel(), qu.ravel()))
 
     me.vertices.foreach_set("co", ve.ravel())
     me.polygons.foreach_set("loop_total", face_lengths)
@@ -47,14 +47,6 @@ def read_loops(mesh):
     loops = np.zeros((len(mesh.polygons)), dtype=np.int)
     mesh.polygons.foreach_get("loop_total", loops)
     return loops 
-
-
-def safe_bincount(data, weights, dts, conn):
-    bc = np.bincount(data, weights)
-    dts[:len(bc)] += bc
-    bc = np.bincount(data)
-    conn[:len(bc)] += bc
-    return (dts, conn)
 
 
 def read_bmesh(bmesh):
@@ -85,11 +77,16 @@ class QFRemeshOperator(bpy.types.Operator):
     polycount = bpy.props.IntProperty(
             name="Polygons",
             description="Output mesh polygon count",
-            min=10, default=500)
+            min=10, default=1000)
 
     sharp = bpy.props.BoolProperty(
-            name="Sharpness",
+            name="Sharp",
             description="Take into account sharp corners",
+            default=False)
+
+    adaptive = bpy.props.BoolProperty(
+            name="Adaptive",
+            description="Adaptive scale",
             default=False)
 
     @classmethod
@@ -123,70 +120,67 @@ class QFRemeshOperator(bpy.types.Operator):
         self.vert_0 = len(nverts)
         bm.free()
 
-        print(nverts)
-        print(ntris)
-        print(nverts.shape, ntris.shape)
-        print(nverts[0], ntris[0])
         print(max([len(i) for i in ntris]))
 
-        new_mesh = qf.remesh(list(nverts), list(ntris))
+        nverts = nverts.transpose()
+        ntris = ntris.transpose()
+        print(nverts.shape, ntris.shape)
+
+        new_mesh = qf.remesh(list(nverts), list(ntris), self.polycount, self.sharp, self.adaptive)
         print("*** remesh complete ***")
         
-        # print(type(new_mesh[0]), type(new_mesh[1]))
+        print(type(new_mesh[0]), type(new_mesh[1]))
 
-        # self.vert_1 = len(new_mesh[0])
-        # self.face_1 = len(new_mesh[1])
-   
-        #remeshed = write_fast(np.array(new_mesh[0]), np.array(new_mesh[1]), [])
-        #context.active_object.data = remeshed
+        print(new_mesh[0][0], new_mesh[1][0])
+        print(new_mesh[0][0].shape, new_mesh[1][0].shape)
+
+        self.vert_1 = len(new_mesh[0])
+        self.face_1 = len(new_mesh[1])
+
+        print(self.vert_1, self.face_1)
+
+        remeshed = write_fast(np.array(new_mesh[0]), np.array(new_mesh[1]))
+        context.active_object.data = remeshed
 
         return {'FINISHED'}
 
-    
+
+class QFRemeshPanel(bpy.types.Panel):
+    """Quadriflow Remesh panel"""
+    bl_label = "Quadriflow remesh"
+    bl_idname = "object.qfremesh_panel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = "Retopology"
+
     def draw(self, context):
         layout = self.layout
-        col = layout.column()
 
+        """
         row = layout.row()
-        row.prop(self, "voxel_size_def", expand=True, text="Island margin quality/performance")
+        row.prop(context.scene, "vdb_remesh_voxel_size_def", expand=True, text="Island margin quality/performance")
 
         row = layout.row()
         col = row.column(align=True)
-        if self.voxel_size_def == "relative":
-            col.prop(self, "voxel_size_object")
+        if context.scene.vdb_remesh_voxel_size_def == "relative":
+            col.prop(context.scene, "vdb_remesh_voxel_size_object")
         else:
-            col.prop(self, "voxel_size_world")
+            col.prop(context.scene, "vdb_remesh_voxel_size_world")
+
+        col.prop(context.scene, "vdb_remesh_isovalue")
+        col.prop(context.scene, "vdb_remesh_adaptivity")
+        col.prop(context.scene, "vdb_remesh_blur")
 
         row = layout.row()
-        col = row.column(align=True)
-        col.prop(self, "isovalue")
-
-        col.prop(self, "adaptivity")
-
-        #row = layout.row()
-        #row.prop(self, "filter_style", expand=True, text="Type of filter to be iterated on the voxels")
-        #row = layout.row()
-        row = layout.row()
-        col = row.column(align=True)
-
-        col.prop(self, "filter_iterations")
-        col.prop(self, "filter_width")
-        col.prop(self, "filter_sigma")
+        row.prop(context.scene, "vdb_remesh_only_quads")
+        row.prop(context.scene, "vdb_remesh_smooth")
+        row.prop(context.scene, "vdb_remesh_project_nearest")
+        """
 
         row = layout.row()
-        #row.prop(self, "only_quads")
-        row.prop(self, "smooth")
-        row.prop(self, "nearest")
+        row.scale_y = 2.0
+        row.operator(QFRemeshOperator.bl_idname, text="Quadriflow remesh")
 
-        if hasattr(self, 'vert_0'):
-            infotext = "Change: {:.2%}".format(self.vert_1/self.vert_0)
-            row = layout.row()
-            row.label(text=infotext)
-            row = layout.row()
-            row.label(text="Verts: {}, Polys: {}".format(self.vert_1, self.face_1))
-
-            row = layout.row()
-            row.label(text="Cache: {} voxels".format(self.grid.activeVoxelCount()))
 
 
 
