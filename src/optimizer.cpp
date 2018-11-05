@@ -827,7 +827,7 @@ void Optimizer::optimize_positions_sharp(
                 auto it = links[v1].find(v2);
                 if (it == links[v1].end()) {
                     printf("Non exist!\n");
-                    exit(0);
+                    //exit(0);
                 }
             }
 
@@ -919,7 +919,7 @@ void Optimizer::optimize_positions_sharp(
         offset += loops[i].size();
     }
     os.close();
-    exit(0);
+    //exit(0);
 }
 
 void Optimizer::optimize_positions_fixed(
@@ -1109,14 +1109,14 @@ void Optimizer::optimize_positions_fixed(
     for (int i = 0; i < entries.size(); ++i) {
         rhs(i) = b[i];
         if (std::isnan(b[i])) {
-            printf("Equation has nan!\n");
-            exit(0);
+            printf("Equation has NaN!\n");
+            //exit(0);
         }
         for (auto& rec : entries[i]) {
             lhsTriplets.push_back(Eigen::Triplet<double>(i, rec.first, rec.second));
             if (std::isnan(rec.second)) {
-                printf("Equation has nan!\n");
-                exit(0);
+                printf("Equation has NaN!\n");
+                //exit(0);
             }
         }
     }

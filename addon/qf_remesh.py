@@ -1,4 +1,4 @@
-# Copyright 2018 Tommi Hyppänen, license: GNU General Public License v2.0
+# Copyright 2018 Tommi Hyppänen, license: GNU General Public License v3.0
 
 from . import qf
 
@@ -126,6 +126,8 @@ class QFRemeshOperator(bpy.types.Operator):
         ntris = ntris.transpose()
         print(nverts.shape, ntris.shape)
 
+        self.polycount = bpy.context.scene.qf_polys
+
         new_mesh = qf.remesh(list(nverts), list(ntris), self.polycount, self.sharp, self.adaptive)
         print("*** remesh complete ***")
         
@@ -153,29 +155,16 @@ class QFRemeshPanel(bpy.types.Panel):
     bl_region_type = 'TOOLS'
     bl_category = "Retopology"
 
+    polycount = bpy.props.IntProperty(
+            name="Polygons",
+            description="Output mesh polygon count",
+            min=10, default=1000, max=100000)
+
     def draw(self, context):
         layout = self.layout
 
-        """
         row = layout.row()
-        row.prop(context.scene, "vdb_remesh_voxel_size_def", expand=True, text="Island margin quality/performance")
-
-        row = layout.row()
-        col = row.column(align=True)
-        if context.scene.vdb_remesh_voxel_size_def == "relative":
-            col.prop(context.scene, "vdb_remesh_voxel_size_object")
-        else:
-            col.prop(context.scene, "vdb_remesh_voxel_size_world")
-
-        col.prop(context.scene, "vdb_remesh_isovalue")
-        col.prop(context.scene, "vdb_remesh_adaptivity")
-        col.prop(context.scene, "vdb_remesh_blur")
-
-        row = layout.row()
-        row.prop(context.scene, "vdb_remesh_only_quads")
-        row.prop(context.scene, "vdb_remesh_smooth")
-        row.prop(context.scene, "vdb_remesh_project_nearest")
-        """
+        row.prop(context.scene, "qf_polys", expand=True, text="Polycount")
 
         row = layout.row()
         row.scale_y = 2.0

@@ -119,7 +119,7 @@ void Parametrizer::AnalyzeValence() {
             } while (deid != i * 3 + j);
             if (sum_int % 4 == 2) {
                 printf("OMG! valence = 2\n");
-                exit(0);
+                //exit(0);
             }
             if (sum_int % 4 == 1) sing1.insert(F(j, i));
             if (sum_int % 4 == 3) sing2.insert(F(j, i));

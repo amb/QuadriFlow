@@ -1,3 +1,5 @@
+# Copyright 2018 Tommi Hyppänen, license: GNU General Public License v3.0
+
 import os
 import sys
 import platform

@@ -540,7 +540,7 @@ void Hierarchy::DownsampleEdgeGraph(std::vector<Vector3i>& FQ, std::vector<Vecto
                         if (EdgeDiff[e] != Vector2i::Zero()) {
                             printf("Unsatisfied !!!...\n");
                             printf("%d %d %d: %d %d\n", F2E[f][0], F2E[f][1], F2E[f][2], e0, e);
-                            exit(0);
+                            //exit(0);
                         }
                         for (auto& p : paths) {
                             toUpper[p.first] = numE;
